@@ -29,7 +29,7 @@ Base.prepare(db.engine, reflect=True)
 # Save references to each table
 Samples_Metadata = Base.classes.sample_metadata
 Samples = Base.classes.samples
-
+session = Session(engine)
 
 @app.route("/")
 def index():
@@ -42,8 +42,8 @@ def names():
     """Return a list of sample names."""
 
     # Use Pandas to perform the sql query
-    stmt = db.session.query(Samples).statement
-    df = pd.read_sql_query(stmt, db.session.bind)
+    stmt = session.query(Samples).statement
+    df = pd.read_sql_query(stmt, session.bind)
 
     # Return a list of the column names (sample names)
     return jsonify(list(df.columns)[2:])
@@ -62,7 +62,7 @@ def sample_metadata(sample):
         Samples_Metadata.WFREQ,
     ]
 
-    results = db.session.query(*sel).filter(Samples_Metadata.sample == sample).all()
+    results = session.query(*sel).filter(Samples_Metadata.sample == sample).all()
 
     # Create a dictionary entry for each row of metadata information
     sample_metadata = {}
@@ -82,8 +82,8 @@ def sample_metadata(sample):
 @app.route("/samples/<sample>")
 def samples(sample):
     """Return `otu_ids`, `otu_labels`,and `sample_values`."""
-    stmt = db.session.query(Samples).statement
-    df = pd.read_sql_query(stmt, db.session.bind)
+    stmt = session.query(Samples).statement
+    df = pd.read_sql_query(stmt, session.bind)
 
     # Filter the data based on the sample number and
     # only keep rows with values above 1
@@ -94,8 +94,18 @@ def samples(sample):
         "sample_values": sample_data[sample].values.tolist(),
         "otu_labels": sample_data.otu_label.tolist(),
         "type": "pie"
-    }
+    } 
     return jsonify(data)
+
+# @app.route("/wfreq/<sample>") 
+# def wfreq(sample):
+#     sample_id=int(sample.split("BB_")[1])
+#     results=session.query(Samples_Metadata).all()
+#     for result in results:
+#         if result.SAMPLEID==sample_id:
+#             sample_wfreq=result.WFREQ
+#     return jsonify(sample_wfreq)
+    
 
 
 if __name__ == "__main__":
