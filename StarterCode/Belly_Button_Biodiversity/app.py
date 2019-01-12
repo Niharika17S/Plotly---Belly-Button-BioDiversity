@@ -20,7 +20,6 @@ app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db/bellybutton.sqlite"
 db = SQLAlchemy(app)
-
 # reflect an existing database into a new model
 Base = automap_base()
 # reflect the tables
@@ -29,7 +28,7 @@ Base.prepare(db.engine, reflect=True)
 # Save references to each table
 Samples_Metadata = Base.classes.sample_metadata
 Samples = Base.classes.samples
-session = Session(engine)
+session = Session(db.engine)
 
 @app.route("/")
 def index():
@@ -62,7 +61,7 @@ def sample_metadata(sample):
         Samples_Metadata.WFREQ,
     ]
 
-    results = session.query(*sel).filter(Samples_Metadata.sample == sample).all()
+    results = db.session.query(*sel).filter(Samples_Metadata.sample == sample).all()
 
     # Create a dictionary entry for each row of metadata information
     sample_metadata = {}
